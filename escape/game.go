@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -46,32 +47,43 @@ func GetUserInput() string {
 }
 
 func HandleUserInput(text string) {
-	var d Direction
 	switch text {
 	case string(East), "ㄷ", "e":
-		d = East
+		if err := moveTo(East); err != nil {
+			fmt.Println(err)
+			return
+		}
 	case string(West), "ㅅ", "t":
-		d = West
+		if err := moveTo(West); err != nil {
+			fmt.Println(err)
+			return
+		}
 	case string(South), "ㄴ", "s":
-		d = South
+		if err := moveTo(South); err != nil {
+			fmt.Println(err)
+			return
+		}
 	case string(North), "ㅂ", "q":
-		d = North
+		if err := moveTo(North); err != nil {
+			fmt.Println(err)
+			return
+		}
 	case "소지품", "인벤", "인벤토리", "twv", "dq":
 		PrintInventory()
-		return
 	default:
 		handleLongCommand(text)
-		return
 	}
+}
 
+func moveTo(d Direction) error {
 	if !CanIGo(d) {
-		fmt.Println("이동할 수 없는 곳입니다.")
-		return
+		return errors.New("이동할 수 없는 곳입니다.")
 	}
 
 	x, y := GetCurrentXY()
 	fX, fY := GetFutureXY(d, x, y)
 	MovePlayer(fX, fY)
+	return nil
 }
 
 func IsGoal() bool {
@@ -110,12 +122,9 @@ func handleDoorCommand(door Door, command string) {
 	case "보", "보다", "본다":
 		PrintDoorStatus(door, x, y)
 	case "열", "열다", "연다":
-		switch GetDoorStatus(x, y) {
-		case Open, Closed:
-			ChangeDoorState(door, x, y)
-		default:
-			PrintCannot()
-		}
+		OpenDoor(door, x, y)
+	case "닫", "닫다", "닫는다":
+		CloseDoor(door, x, y)
 	default:
 		PrintWrongInput()
 	}
@@ -145,18 +154,12 @@ func handleThreeWordsCommand(tokens []string) {
 
 func PrintPath() {
 	fmt.Print("이동가능한 경로: ")
-
-	if CanIGo(East) {
-		fmt.Printf("%s ", East)
-	}
-	if CanIGo(West) {
-		fmt.Printf("%s ", West)
-	}
-	if CanIGo(South) {
-		fmt.Printf("%s ", South)
-	}
-	if CanIGo(North) {
-		fmt.Printf("%s ", North)
+	for _, direction := range []Direction{
+		East, West, South, North,
+	} {
+		if CanIGo(direction) {
+			fmt.Printf("%s ", direction)
+		}
 	}
 	fmt.Println()
 }

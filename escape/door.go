@@ -72,6 +72,28 @@ func GetDoorDirection(door Door, x, y int) Direction {
 	return NoDirection
 }
 
+func OpenDoor(door Door, x, y int) {
+	switch GetDoorStatus(x, y) {
+	case Closed:
+		ChangeDoorState(door, x, y)
+	case Open:
+		fmt.Printf("%s은 이미 열려있습니다.\n", door)
+	default:
+		PrintCannot()
+	}
+}
+
+func CloseDoor(door Door, x, y int) {
+	switch GetDoorStatus(x, y) {
+	case Open:
+		ChangeDoorState(door, x, y)
+	case Closed:
+		fmt.Printf("%s은 이미 닫혀있습니다.\n", door)
+	default:
+		PrintCannot()
+	}
+}
+
 func ChangeDoorState(door Door, x, y int) {
 	direction := GetDoorDirection(door, x, y)
 	fX, fY := GetFutureXY(direction, x, y)
