@@ -1,18 +1,18 @@
 package main
 
-import "fmt"
+import (
+	"escape/game"
+	"escape/game/player"
+	"escape/stages/stage1"
+	"escape/stages/stage2"
+	"fmt"
+)
 
 func main() {
-	InitGame()
+	username := game.GetUserName()
+	p := player.NewPlayer(username)
+	fmt.Printf("%s님 환영합니다.\n\n", p.Name)
 
-	for {
-		PrintCurrentStatus()
-		text := GetUserInput()
-		HandleUserInput(text)
-		fmt.Println()
-		if IsGoal() {
-			fmt.Println("축하합니다.")
-			break
-		}
-	}
+	stage1.GoToStage(&p)
+	stage2.GoToStage(&p)
 }
