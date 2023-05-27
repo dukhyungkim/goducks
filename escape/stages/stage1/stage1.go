@@ -2,16 +2,12 @@ package stage1
 
 import (
 	"escape/game"
-	"escape/game/construction"
-	"escape/game/direction"
+	"escape/game/direct"
+	"escape/game/door"
 	"escape/game/item"
 	"escape/game/player"
+	"escape/game/room"
 	"fmt"
-)
-
-const (
-	goalX = 7
-	goalY = 5
 )
 
 func GoToStage(p *player.Player) {
@@ -33,35 +29,41 @@ func GoToStage(p *player.Player) {
 	}
 }
 
-func InitStage(rooms *[10][10]*construction.Room) {
+func InitStage(rooms *[10][10]*room.Room) {
 	for i := 0; i < len(rooms); i++ {
 		for j := 0; j < len(rooms[i]); j++ {
 			rooms[i][j] = nil
 		}
 	}
-	rooms[0][3] = &construction.Room{Tools: []item.Tool{item.NewHammer()}}
-	rooms[1][1] = &construction.Room{}
-	rooms[1][2] = &construction.Room{}
-	rooms[1][3] = &construction.Room{Door: construction.NewGlassDoor(direction.East)}
-	rooms[2][3] = &construction.Room{Door: construction.NewGlassDoor(direction.West)}
-	rooms[3][1] = &construction.Room{Door: construction.NewWoodDoor(direction.East)}
-	rooms[3][2] = &construction.Room{}
-	rooms[3][3] = &construction.Room{}
-	rooms[3][4] = &construction.Room{}
-	rooms[4][0] = &construction.Room{Tools: []item.Tool{item.NewKey()}}
-	rooms[4][1] = &construction.Room{Door: construction.NewWoodDoor(direction.West)}
-	rooms[4][4] = &construction.Room{Door: construction.NewWoodDoor(direction.North)}
-	rooms[4][5] = &construction.Room{Door: construction.NewWoodDoor(direction.South)}
-	rooms[5][5] = &construction.Room{}
-	rooms[6][5] = &construction.Room{Door: construction.NewLockedDoor(direction.East)}
-	rooms[7][5] = &construction.Room{Door: construction.NewLockedDoor(direction.West)}
+	rooms[0][3] = &room.Room{Tools: []*item.Tool{item.NewHammer()}}
+	rooms[1][1] = &room.Room{}
+	rooms[1][2] = &room.Room{}
+	rooms[1][3] = &room.Room{Door: door.NewGlassDoor(direct.East)}
+	rooms[2][3] = &room.Room{Door: door.NewGlassDoor(direct.West)}
+	rooms[3][1] = &room.Room{Door: door.NewWoodDoor(direct.East)}
+	rooms[3][2] = &room.Room{}
+	rooms[3][3] = &room.Room{}
+	rooms[3][4] = &room.Room{}
+	rooms[4][0] = &room.Room{Tools: []*item.Tool{item.NewKey()}}
+	rooms[4][1] = &room.Room{Door: door.NewWoodDoor(direct.West)}
+	rooms[4][4] = &room.Room{Door: door.NewWoodDoor(direct.North)}
+	rooms[4][5] = &room.Room{Door: door.NewWoodDoor(direct.South)}
+	rooms[5][5] = &room.Room{}
+	rooms[6][5] = &room.Room{Door: door.NewLockedDoor(direct.East)}
+	rooms[7][5] = &room.Room{Door: door.NewLockedDoor(direct.West)}
 }
 
 func StartPosition() (x, y int) {
-	return 1, 1
+	const startX = 1
+	const startY = 1
+
+	return startX, startY
 }
 
 func IsGoal(p player.Player) bool {
+	const goalX = 7
+	const goalY = 5
+
 	x, y := player.CurrentPosition(p)
 	return goalX == x && goalY == y
 }

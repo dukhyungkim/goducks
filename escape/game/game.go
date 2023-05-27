@@ -1,14 +1,17 @@
 package game
 
 import (
-	"escape/game/construction"
-	"escape/game/direction"
+	"escape/game/direct"
+	"escape/game/door"
 	"escape/game/item"
+	"escape/game/monster"
 	"escape/game/player"
+	"escape/game/room"
 	"escape/msg"
 	"escape/util"
 	"fmt"
 	"log"
+	"math/rand"
 	"strings"
 )
 
@@ -17,7 +20,7 @@ const (
 	ySize = 10
 )
 
-var rooms = [xSize][ySize]*construction.Room{}
+var rooms = [xSize][ySize]*room.Room{}
 
 func GetUserName() string {
 	const minLen = 1
@@ -34,13 +37,13 @@ func GetUserName() string {
 	}
 }
 
-func GetRooms() *[10][10]*construction.Room {
+func GetRooms() *[10][10]*room.Room {
 	return &rooms
 }
 
-func CanIGo(p player.Player, d direction.Direction) bool {
+func CanIGo(p player.Player, d direct.Direction) bool {
 	cX, cY := player.CurrentPosition(p)
-	fX, fY := direction.GetFutureXY(d, cX, cY)
+	fX, fY := direct.GetFutureXY(d, cX, cY)
 
 	if xSize <= fX || ySize <= fY {
 		return false
@@ -61,7 +64,7 @@ func CanIGo(p player.Player, d direction.Direction) bool {
 
 	if fRoom.Door != nil {
 		switch cRoom.Door.State {
-		case construction.Open, construction.Crashed:
+		case door.Open, door.Crashed:
 			return true
 		default:
 			return false
@@ -71,58 +74,90 @@ func CanIGo(p player.Player, d direction.Direction) bool {
 }
 
 func PrintCurrentStatus(p player.Player) {
-	room := CurrentRoom(p)
-	PrintDoorInfo(*room)
-	PrintItemInfo(*room)
-	PrintPath(p)
+	r := currentRoom(p)
+	printDoorInfo(*r)
+	printItemInfo(*r)
+	printBoxInfo(*r)
+	printMonsterInfo(*r)
+	printPath(p)
 }
 
-func PrintDoorInfo(room construction.Room) {
-	door := room.Door
-	if door == nil {
+func printDoorInfo(r room.Room) {
+	d := r.Door
+	if d == nil {
 		return
 	}
-	fmt.Printf("%s쪽에 %s이 있습니다.\n", door.Direction, door.Name)
-	PrintDoorStatus(*door)
+	fmt.Printf("%s쪽에 %s이 있습니다.\n", d.Direction, d.Name)
+	printDoorStatus(*d)
 }
 
-func PrintDoorStatus(door construction.Door) {
-	switch door.State {
-	case construction.Open:
-		fmt.Printf("%s이 열려있습니다. 지나갈 수 있습니다.\n", door.Name)
-	case construction.Closed:
-		fmt.Printf("%s이 닫혀있습니다. 지나갈 수 없습니다.\n", door.Name)
-	case construction.Locked:
-		fmt.Printf("%s이 잠겨있습니다. 열쇠가 필요합니다.\n", door.Name)
-	case construction.Crashed:
-		fmt.Printf("%s이 부숴져있습니다. 지나갈 수 있습니다.\n", door.Name)
+func printDoorStatus(d door.Door) {
+	switch d.State {
+	case door.Open:
+		fmt.Printf("%s이 열려있습니다. 지나갈 수 있습니다.\n", d.Name)
+	case door.Closed:
+		fmt.Printf("%s이 닫혀있습니다. 지나갈 수 없습니다.\n", d.Name)
+	case door.Locked:
+		fmt.Printf("%s이 잠겨있습니다. 열쇠가 필요합니다.\n", d.Name)
+	case door.Crashed:
+		fmt.Printf("%s이 부숴져있습니다. 지나갈 수 있습니다.\n", d.Name)
 	}
 }
 
-func PrintItemInfo(room construction.Room) {
-	if len(room.Tools) == 0 {
+func printItemInfo(r room.Room) {
+	if len(r.Weapons) == 0 && len(r.Armors) == 0 && len(r.Tools) == 0 {
 		return
 	}
-	fmt.Print("떨어진 아이템: ")
-	for i, tool := range room.Tools {
-		fmt.Print(tool.Name)
-		if i != len(room.Tools)-1 {
-			fmt.Print(", ")
-		}
+
+	var outputs []string
+
+	for _, weapon := range r.Weapons {
+		outputs = append(outputs, weapon.Name)
 	}
-	fmt.Println()
+
+	for _, armor := range r.Armors {
+		outputs = append(outputs, armor.Name)
+	}
+
+	for _, tool := range r.Tools {
+		outputs = append(outputs, tool.Name)
+	}
+
+	fmt.Println("떨어진 아이템:", strings.Join(outputs, ", "))
 }
 
-func PrintPath(p player.Player) {
-	fmt.Print("이동가능한 경로: ")
-	for _, d := range []direction.Direction{
-		direction.East, direction.West, direction.South, direction.North,
-	} {
+func printBoxInfo(r room.Room) {
+	if r.ItemBox == nil {
+		return
+	}
+	fmt.Println("상자가 놓여있습니다.")
+}
+
+func printMonsterInfo(r room.Room) {
+	if r.Monster == nil {
+		return
+	}
+	fmt.Printf("%s이(가) 돌아다니고 있습니다.\n", r.Monster.Name)
+}
+
+func printPath(p player.Player) {
+	directions := findPossibleToMove(p)
+	tmpStrs := make([]string, len(directions))
+	for i := range directions {
+		tmpStrs[i] = string(directions[i])
+	}
+	fmt.Println("이동가능한 경로:", strings.Join(tmpStrs, ", "))
+}
+
+func findPossibleToMove(p player.Player) []direct.Direction {
+	directions := []direct.Direction{direct.East, direct.West, direct.South, direct.North}
+	result := make([]direct.Direction, 0, len(directions))
+	for _, d := range directions {
 		if CanIGo(p, d) {
-			fmt.Printf("%s ", d)
+			result = append(result, d)
 		}
 	}
-	fmt.Println()
+	return result
 }
 
 func GetCommand() string {
@@ -132,28 +167,143 @@ func GetCommand() string {
 
 func HandleCommand(p *player.Player, text string) {
 	switch text {
-	case string(direction.East), "ㄷ", "e":
-		moveTo(p, direction.East)
-	case string(direction.West), "ㅅ", "t":
-		moveTo(p, direction.West)
-	case string(direction.South), "ㄴ", "s":
-		moveTo(p, direction.South)
-	case string(direction.North), "ㅂ", "q":
-		moveTo(p, direction.North)
-	case "소지품", "인벤", "인벤토리", "twv", "dq":
+	case string(direct.East), "ㄷ", "e", "6":
+		moveTo(p, direct.East)
+	case string(direct.West), "ㅅ", "t", "4":
+		moveTo(p, direct.West)
+	case string(direct.South), "ㄴ", "s", "2":
+		moveTo(p, direct.South)
+	case string(direct.North), "ㅂ", "q", "8":
+		moveTo(p, direct.North)
+	case "소지", "소지품", "인벤", "인벤토리", "tw", "twv", "dq", "thwl", "thwlvna":
 		player.PrintInventory(*p)
+	case "장비", "wkdql":
+		player.PrintEquipments(*p)
+	case "정보", "wjdqh":
+		player.PrintStatus(*p)
 	default:
 		handleLongCommand(p, text)
 	}
 }
 
-func moveTo(p *player.Player, d direction.Direction) {
+func GetBattleCommand() string {
+	fmt.Print("!! ")
+	return util.GetUserInput()
+}
+
+func HandleBattleCommand(p *player.Player, text string) {
+	r := currentRoom(*p)
+	m := r.Monster
+	switch text {
+	case "공격", "쳐", "ㅊ", "c":
+		fmt.Printf("당신은 %s을(를) 공격합니다.\n", m.Name)
+		if r.Monster != nil && p.Equipment.RightHand.Name != "" {
+			attack := p.Equipment.RightHand.Attack + p.Attack
+			fmt.Printf("당신은 %s에게 %d의 피해를 입혔습니다.\n", m.Name, attack)
+			m.CurrentHealth -= attack
+			if m.CurrentHealth <= 0 {
+				fmt.Printf("%s이(가) 쓰러졌습니다.\n", m.Name)
+				itemName, itemCount := monster.DropItem(m)
+				fmt.Printf("%s이(가) %d개 떨어졌습니다.\n", itemName, itemCount)
+				for i := 0; i < itemCount; i++ {
+					switch itemName {
+					case "회복약":
+						r.Tools = append(r.Tools, item.NewPotion())
+					case "열쇠":
+						r.Tools = append(r.Tools, item.NewKey())
+					}
+				}
+				r.Monster = nil
+				p.Mode = player.InNormal
+				fmt.Println()
+			}
+		}
+		if r.Monster != nil && p.Equipment.LeftHand.Name != "" {
+			attack := p.Equipment.LeftHand.Attack + p.Attack
+			fmt.Printf("당신은 %s에게 %d의 피해를 입혔습니다.\n", m.Name, attack)
+			m.CurrentHealth -= attack
+			if m.CurrentHealth <= 0 {
+				fmt.Printf("%s이(가) 쓰러졌습니다.\n", m.Name)
+				itemName, itemCount := monster.DropItem(m)
+				fmt.Printf("%s이(가) %d개 떨어졌습니다.\n", itemName, itemCount)
+				for i := 0; i < itemCount; i++ {
+					switch itemName {
+					case "회복약":
+						r.Tools = append(r.Tools, item.NewPotion())
+					case "열쇠":
+						r.Tools = append(r.Tools, item.NewKey())
+					}
+				}
+				r.Monster = nil
+				p.Mode = player.InNormal
+				fmt.Println()
+			}
+		}
+		if r.Monster != nil && p.Equipment.RightHand.Name == "" && p.Equipment.LeftHand.Name == "" {
+			attack := p.Attack
+			fmt.Printf("당신은 %s에게 %d의 피해를 입혔습니다.\n", m.Name, attack)
+			m.CurrentHealth -= attack
+			if m.CurrentHealth <= 0 {
+				fmt.Printf("%s이(가) 쓰러졌습니다.\n", m.Name)
+				itemName, itemCount := monster.DropItem(m)
+				fmt.Printf("%s이(가) %d개 떨어졌습니다.\n", itemName, itemCount)
+				for i := 0; i < itemCount; i++ {
+					switch itemName {
+					case "회복약":
+						r.Tools = append(r.Tools, item.NewPotion())
+					case "열쇠":
+						r.Tools = append(r.Tools, item.NewKey())
+					}
+				}
+				r.Monster = nil
+				p.Mode = player.InNormal
+				fmt.Println()
+			}
+		}
+
+		if r.Monster != nil {
+			monster.AttackPlayer(m, p)
+		}
+	case "도망":
+		if rand.Int()%2 == 1 {
+			fmt.Printf("당신은 %s에게서 성공적으로 도망쳤습니다.\n", m.Name)
+			directions := findPossibleToMove(*p)
+			to := directions[rand.Int()%len(directions)]
+			moveTo(p, to)
+			return
+		} else {
+			fmt.Println("도망칠 수 없습니다!")
+			monster.AttackPlayer(m, p)
+			return
+		}
+	case "회복약 사용":
+		tool, ok := player.FindTool(*p, "회복약")
+		if !ok {
+			fmt.Println("당신에게 그런 도구는 없습니다!")
+			return
+		}
+
+		fmt.Println("당신은 회복약을 사용했습니다.")
+		fmt.Printf("체력이 %d 회복되었습니다.\n", tool.HealthRecovery)
+		p.CurrentHealth += tool.HealthRecovery
+		if p.CurrentHealth > p.MaxHealth {
+			p.CurrentHealth = p.MaxHealth
+		}
+		player.RemoveToolFromInventory(p, tool)
+
+		monster.AttackPlayer(m, p)
+	default:
+		fmt.Println(msg.ErrWrongInput)
+	}
+}
+
+func moveTo(p *player.Player, d direct.Direction) {
 	if !CanIGo(*p, d) {
 		fmt.Println("이동할 수 없는 곳입니다.")
 		return
 	}
 	x, y := player.CurrentPosition(*p)
-	fX, fY := direction.GetFutureXY(d, x, y)
+	fX, fY := direct.GetFutureXY(d, x, y)
 	player.SetPosition(p, fX, fY)
 }
 
@@ -170,20 +320,69 @@ func handleLongCommand(p *player.Player, text string) {
 }
 
 func handleTwoWordsCommand(p *player.Player, tokens []string) {
-	room := CurrentRoom(*p)
+	r := currentRoom(*p)
 
 	target := tokens[0]
 	command := tokens[1]
 
-	if room.Door != nil {
-		if room.Door.Name == target {
-			handleDoorCommand(p, room.Door, command)
+	if r.Door != nil {
+		if r.Door.Name == target {
+			handleDoorCommand(p, r.Door, command)
 			return
 		}
 	}
 
-	for _, tool := range room.Tools {
+	for _, weapon := range r.Weapons {
+		if weapon.Name == target {
+			handleWeaponCommand(p, *weapon, command)
+			return
+		}
+	}
+
+	for _, armor := range r.Armors {
+		if armor.Name == target {
+			handleArmorCommand(p, *armor, command)
+			return
+		}
+	}
+
+	for _, tool := range r.Tools {
 		if tool.Name == target {
+			handleItemCommand(p, *tool, command)
+			return
+		}
+	}
+
+	if r.ItemBox != nil {
+		if target == "상자" {
+			handleBoxCommand(r, command)
+			return
+		}
+	}
+
+	for r.Monster != nil {
+		if target == r.Monster.Name {
+			handleMonsterCommand(r, p, command)
+			return
+		}
+	}
+
+	for _, weapon := range p.Inventory.Weapons {
+		if target == weapon.Name {
+			handleWeaponCommand(p, weapon, command)
+			return
+		}
+	}
+
+	for _, armor := range p.Inventory.Armors {
+		if target == armor.Name {
+			handleArmorCommand(p, armor, command)
+			return
+		}
+	}
+
+	for _, tool := range p.Inventory.Tools {
+		if target == tool.Name {
 			handleItemCommand(p, tool, command)
 			return
 		}
@@ -192,40 +391,68 @@ func handleTwoWordsCommand(p *player.Player, tokens []string) {
 	fmt.Println(msg.ErrWrongInput)
 }
 
-func handleDoorCommand(p *player.Player, door *construction.Door, command string) {
+func handleMonsterCommand(r *room.Room, p *player.Player, command string) {
+	switch command {
+	case "공격", "쳐":
+		p.Mode = player.InBattle
+		fmt.Printf("당신은 %s와(과) 전투를 시작합니다.\n", r.Monster.Name)
+	}
+}
+
+func handleBoxCommand(r *room.Room, command string) {
+	switch command {
+	case "열", "열다", "연다":
+		fmt.Println("상자를 열었습니다.")
+		weapon, armor, tools := item.OpenBox(r.ItemBox)
+		r.ItemBox = nil
+		if weapon != nil {
+			r.Weapons = append(r.Weapons, weapon)
+		}
+		if armor != nil {
+			r.Armors = append(r.Armors, armor)
+		}
+		if len(tools) != 0 {
+			r.Tools = append(r.Tools, tools...)
+		}
+	default:
+		fmt.Println(msg.ErrCannot)
+	}
+}
+
+func handleDoorCommand(p *player.Player, d *door.Door, command string) {
 	switch command {
 	case "보", "보다", "본다":
-		PrintDoorStatus(*door)
+		printDoorStatus(*d)
 	case "열", "열다", "연다":
-		switch door.State {
-		case construction.Open:
-			fmt.Printf("%s은 이미 열려있습니다.\n", door.Name)
+		switch d.State {
+		case door.Open:
+			fmt.Printf("%s은 이미 열려있습니다.\n", d.Name)
 			return
-		case construction.Closed:
-			construction.OpenDoor(door)
-			nextDoor := findNextDoor(p, *door)
-			construction.OpenDoor(nextDoor)
-			fmt.Printf("%s을(를) 열었습니다.\n", door.Name)
+		case door.Closed:
+			door.OpenDoor(d)
+			nextDoor := findNextDoor(p, *d)
+			door.OpenDoor(nextDoor)
+			fmt.Printf("%s을(를) 열었습니다.\n", d.Name)
 		default:
 			fmt.Println(msg.ErrCannot)
 			return
 		}
 	case "닫", "닫다", "닫는다":
-		switch door.State {
-		case construction.Closed:
-			fmt.Printf("%s은 이미 닫혀있습니다.\n", door.Name)
+		switch d.State {
+		case door.Closed:
+			fmt.Printf("%s은 이미 닫혀있습니다.\n", d.Name)
 			return
-		case construction.Open:
-			construction.CloseDoor(door)
-			nextDoor := findNextDoor(p, *door)
-			construction.CloseDoor(nextDoor)
-			fmt.Printf("%s을(를) 닫았습니다.\n", door.Name)
+		case door.Open:
+			door.CloseDoor(d)
+			nextDoor := findNextDoor(p, *d)
+			door.CloseDoor(nextDoor)
+			fmt.Printf("%s을(를) 닫았습니다.\n", d.Name)
 		default:
 			fmt.Println(msg.ErrCannot)
 			return
 		}
-		if door.State == construction.Closed {
-			fmt.Printf("%s은 이미 닫혀있습니다.\n", door.Name)
+		if d.State == door.Closed {
+			fmt.Printf("%s은 이미 닫혀있습니다.\n", d.Name)
 			return
 		}
 	default:
@@ -233,12 +460,42 @@ func handleDoorCommand(p *player.Player, door *construction.Door, command string
 	}
 }
 
-func handleItemCommand(p *player.Player, item item.Tool, command string) {
-	room := CurrentRoom(*p)
+func handleWeaponCommand(p *player.Player, weapon item.Weapon, command string) {
+	r := currentRoom(*p)
 	switch command {
-	case "줍", "주워", "줍다":
-		player.PutItemToInventory(p, item)
-		RemoveTool(room, item)
+	case "줍", "주워":
+		player.AddWeaponToInventory(p, weapon)
+		room.RemoveWeapon(r, weapon)
+	case "착", "착용":
+		player.EquipWeapon(p, weapon)
+	case "벗", "벗어":
+		player.UnEquipWeapon(p, weapon.Name)
+	default:
+		fmt.Println(msg.ErrWrongInput)
+	}
+}
+
+func handleArmorCommand(p *player.Player, armor item.Armor, command string) {
+	r := currentRoom(*p)
+	switch command {
+	case "줍", "주워":
+		player.AddArmorToInventory(p, armor)
+		room.RemoveArmor(r, armor)
+	case "입", "입다":
+		player.EquipArmor(p, armor)
+	case "벗", "벗어":
+		player.UnEquipArmor(p, armor.Name)
+	default:
+		fmt.Println(msg.ErrWrongInput)
+	}
+}
+
+func handleItemCommand(p *player.Player, tool item.Tool, command string) {
+	r := currentRoom(*p)
+	switch command {
+	case "줍", "주워":
+		player.AddToolToInventory(p, tool)
+		room.RemoveTool(r, tool)
 	default:
 		fmt.Println(msg.ErrWrongInput)
 	}
@@ -253,57 +510,49 @@ func handleThreeWordsCommand(p *player.Player, tokens []string) {
 			fmt.Println(msg.ErrNotHave)
 			return
 		}
-		room := CurrentRoom(*p)
-		if room.Door.Name != tokens[1] {
+		r := currentRoom(*p)
+		if r.Door.Name != tokens[1] {
 			fmt.Println(msg.ErrNotFound)
 			return
 		}
-		UseTool(p, tool, room.Door)
+		useTool(p, tool, r.Door)
 	default:
 		fmt.Println(msg.ErrWrongInput)
 	}
 }
 
-func CurrentRoom(p player.Player) *construction.Room {
+func currentRoom(p player.Player) *room.Room {
 	x, y := player.CurrentPosition(p)
 	return rooms[x][y]
 }
 
-func RemoveTool(room *construction.Room, tool item.Tool) {
-	for i, t := range room.Tools {
-		if t.Name == tool.Name {
-			room.Tools[i] = item.Tool{}
-		}
-	}
-}
-
-func UseTool(p *player.Player, tool item.Tool, door *construction.Door) {
+func useTool(p *player.Player, tool item.Tool, d *door.Door) {
 	switch tool.Type {
 	case item.Hammer:
-		if door.Type == construction.Glass {
-			construction.CrashDoor(door)
-			nextDoor := findNextDoor(p, *door)
-			construction.CrashDoor(nextDoor)
-			fmt.Printf("%s로 %s을 부쉈습니다.\n", tool.Name, door.Name)
-			player.RemoveTool(p, tool)
+		if d.Type == door.Glass {
+			door.CrashDoor(d)
+			nextDoor := findNextDoor(p, *d)
+			door.CrashDoor(nextDoor)
+			fmt.Printf("%s로 %s을 부쉈습니다.\n", tool.Name, d.Name)
+			player.RemoveToolFromInventory(p, tool)
 			return
 		}
 	case item.Key:
-		if door.Type == construction.Locked {
-			construction.UnlockDoor(door)
-			nextDoor := findNextDoor(p, *door)
-			construction.UnlockDoor(nextDoor)
-			fmt.Printf("%s로 %s을 열었습니다.\n", tool.Name, door.Name)
-			player.RemoveTool(p, tool)
+		if d.Type == door.Locked {
+			door.UnlockDoor(d)
+			nextDoor := findNextDoor(p, *d)
+			door.UnlockDoor(nextDoor)
+			fmt.Printf("%s로 %s을 열었습니다.\n", tool.Name, d.Name)
+			player.RemoveToolFromInventory(p, tool)
 			return
 		}
 	}
 	fmt.Println(msg.ErrCannot)
 }
 
-func findNextDoor(p *player.Player, door construction.Door) *construction.Door {
+func findNextDoor(p *player.Player, door door.Door) *door.Door {
 	x, y := player.CurrentPosition(*p)
-	fX, fY := direction.GetFutureXY(door.Direction, x, y)
+	fX, fY := direct.GetFutureXY(door.Direction, x, y)
 	nextDoor := rooms[fX][fY].Door
 	if nextDoor != nil && nextDoor.Name == door.Name {
 		return nextDoor

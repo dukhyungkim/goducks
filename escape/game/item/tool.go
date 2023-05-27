@@ -14,14 +14,14 @@ const (
 	Potion
 )
 
-func NewHammer() Tool {
-	return Tool{Name: "망치", Type: Hammer}
+func NewHammer() *Tool {
+	return &Tool{Name: "망치", Type: Hammer}
 }
 
-func NewKey() Tool {
-	return Tool{Name: "열쇠", Type: Key}
+func NewKey() *Tool {
+	return &Tool{Name: "열쇠", Type: Key}
 }
 
-func NewPotion() Tool {
-	return Tool{Name: "회복약", Type: Potion, HealthRecovery: 30}
+func NewPotion() *Tool {
+	return &Tool{Name: "회복약", Type: Potion, HealthRecovery: 30}
 }

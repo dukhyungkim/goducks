@@ -2,16 +2,13 @@ package stage2
 
 import (
 	"escape/game"
-	"escape/game/construction"
-	"escape/game/direction"
+	"escape/game/direct"
+	"escape/game/door"
 	"escape/game/item"
+	"escape/game/monster"
 	"escape/game/player"
+	"escape/game/room"
 	"fmt"
-)
-
-const (
-	goalX = 0
-	goalY = 7
 )
 
 func GoToStage(p *player.Player) {
@@ -22,6 +19,11 @@ func GoToStage(p *player.Player) {
 	player.SetPosition(p, x, y)
 
 	for {
+		if p.Mode == player.InBattle {
+			command := game.GetBattleCommand()
+			game.HandleBattleCommand(p, command)
+			continue
+		}
 		game.PrintCurrentStatus(*p)
 		command := game.GetCommand()
 		game.HandleCommand(p, command)
@@ -33,35 +35,67 @@ func GoToStage(p *player.Player) {
 	}
 }
 
-func InitStage(rooms *[10][10]*construction.Room) {
+func InitStage(rooms *[10][10]*room.Room) {
 	for i := 0; i < len(rooms); i++ {
 		for j := 0; j < len(rooms[i]); j++ {
 			rooms[i][j] = nil
 		}
 	}
-	rooms[0][3] = &construction.Room{Tools: []item.Tool{item.NewHammer()}}
-	rooms[1][1] = &construction.Room{}
-	rooms[1][2] = &construction.Room{}
-	rooms[1][3] = &construction.Room{Door: construction.NewGlassDoor(direction.East)}
-	rooms[2][3] = &construction.Room{Door: construction.NewGlassDoor(direction.West)}
-	rooms[3][1] = &construction.Room{Door: construction.NewWoodDoor(direction.East)}
-	rooms[3][2] = &construction.Room{}
-	rooms[3][3] = &construction.Room{}
-	rooms[3][4] = &construction.Room{}
-	rooms[4][0] = &construction.Room{Tools: []item.Tool{item.NewKey()}}
-	rooms[4][1] = &construction.Room{Door: construction.NewWoodDoor(direction.West)}
-	rooms[4][4] = &construction.Room{Door: construction.NewWoodDoor(direction.North)}
-	rooms[4][5] = &construction.Room{Door: construction.NewWoodDoor(direction.South)}
-	rooms[5][5] = &construction.Room{}
-	rooms[6][5] = &construction.Room{Door: construction.NewLockedDoor(direction.East)}
-	rooms[7][5] = &construction.Room{Door: construction.NewLockedDoor(direction.West)}
+
+	rooms[0][7] = &room.Room{Door: door.NewLockedDoor(direct.East)}
+
+	rooms[1][3] = &room.Room{Monster: monster.NewDeer(), Door: door.NewGlassDoor(direct.North)}
+	rooms[1][4] = &room.Room{Door: door.NewGlassDoor(direct.South)}
+	rooms[1][5] = &room.Room{}
+	rooms[1][6] = &room.Room{}
+	rooms[1][7] = &room.Room{Door: door.NewLockedDoor(direct.West)}
+
+	rooms[2][3] = &room.Room{}
+
+	rooms[3][3] = &room.Room{Door: door.NewGlassDoor(direct.East)}
+	rooms[3][6] = &room.Room{ItemBox: item.NewItemBox(), Door: door.NewWoodDoor(direct.East)}
+
+	rooms[4][3] = &room.Room{Monster: monster.NewRabbit(), Tools: []*item.Tool{item.NewHammer()}, Door: door.NewGlassDoor(direct.West)}
+	rooms[4][4] = &room.Room{}
+	rooms[4][5] = &room.Room{}
+	rooms[4][6] = &room.Room{Monster: monster.NewSquirrel(), Door: door.NewWoodDoor(direct.West)}
+	rooms[4][7] = &room.Room{}
+	rooms[4][8] = &room.Room{}
+	rooms[4][9] = &room.Room{ItemBox: item.NewItemBox(), Tools: []*item.Tool{item.NewHammer()}}
+
+	rooms[5][6] = &room.Room{}
+
+	rooms[6][0] = &room.Room{ItemBox: item.NewItemBox(), Door: door.NewWoodDoor(direct.North)}
+	rooms[6][1] = &room.Room{Door: door.NewWoodDoor(direct.South)}
+	rooms[6][2] = &room.Room{Tools: []*item.Tool{item.NewHammer()}}
+	rooms[6][3] = &room.Room{}
+	rooms[6][4] = &room.Room{}
+	rooms[6][5] = &room.Room{Monster: monster.NewSquirrel()}
+	rooms[6][6] = &room.Room{Tools: []*item.Tool{item.NewPotion()}}
+
+	rooms[7][2] = &room.Room{}
+	rooms[7][6] = &room.Room{}
+
+	rooms[8][2] = &room.Room{}
+	rooms[8][6] = &room.Room{Door: door.NewGlassDoor(direct.East)}
+
+	rooms[9][0] = &room.Room{}
+	rooms[9][1] = &room.Room{}
+	rooms[9][2] = &room.Room{Weapons: []*item.Weapon{item.NewWoodSword()}}
+	rooms[9][6] = &room.Room{ItemBox: item.NewItemBox(), Door: door.NewGlassDoor(direct.West)}
 }
 
 func StartPosition() (x, y int) {
-	return 1, 1
+	const startX = 9
+	const startY = 0
+
+	return startX, startY
 }
 
 func IsGoal(p player.Player) bool {
+	const goalX = 0
+	const goalY = 7
+
 	x, y := player.CurrentPosition(p)
 	return goalX == x && goalY == y
 }

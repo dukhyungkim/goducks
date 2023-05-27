@@ -1,4 +1,8 @@
-package direction
+package direct
+
+import (
+	"fmt"
+)
 
 type Direction string
 
@@ -25,6 +29,21 @@ func GetFutureXY(d Direction, x, y int) (futureX, futureY int) {
 	case North:
 		return x, y + 1
 	default:
-		return x, y
+		panic(fmt.Sprintf("wrong direction: %v", d))
+	}
+}
+
+func GetAgainstDirect(d Direction) Direction {
+	switch d {
+	case East:
+		return West
+	case West:
+		return East
+	case South:
+		return North
+	case North:
+		return South
+	default:
+		panic(fmt.Sprintf("wrong direction: %v", d))
 	}
 }

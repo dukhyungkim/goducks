@@ -1,7 +1,7 @@
-package construction
+package door
 
 import (
-	"escape/game/direction"
+	"escape/game/direct"
 	"escape/msg"
 	"fmt"
 )
@@ -10,7 +10,7 @@ type Door struct {
 	Name      string
 	Type      DoorType
 	State     DoorState
-	Direction direction.Direction
+	Direction direct.Direction
 }
 
 type DoorType int8
@@ -30,15 +30,15 @@ const (
 	Crashed
 )
 
-func NewGlassDoor(d direction.Direction) *Door {
+func NewGlassDoor(d direct.Direction) *Door {
 	return &Door{Name: "유리문", Type: Glass, State: Closed, Direction: d}
 }
 
-func NewWoodDoor(d direction.Direction) *Door {
+func NewWoodDoor(d direct.Direction) *Door {
 	return &Door{Name: "나무문", Type: Wood, State: Closed, Direction: d}
 }
 
-func NewLockedDoor(d direction.Direction) *Door {
+func NewLockedDoor(d direct.Direction) *Door {
 	return &Door{Name: "잠긴문", Type: Lock, State: Locked, Direction: d}
 }
 
