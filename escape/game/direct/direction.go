@@ -18,7 +18,7 @@ type Coordinates struct {
 	Y int
 }
 
-func GetFutureXY(d Direction, x, y int) (futureX, futureY int) {
+func (d Direction) GetFutureXY(x, y int) (futureX, futureY int) {
 	switch d {
 	case East:
 		return x + 1, y
@@ -33,7 +33,7 @@ func GetFutureXY(d Direction, x, y int) (futureX, futureY int) {
 	}
 }
 
-func GetAgainstDirect(d Direction) Direction {
+func (d Direction) GetAgainstDirect() Direction {
 	switch d {
 	case East:
 		return West

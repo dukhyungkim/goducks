@@ -15,37 +15,37 @@ type Room struct {
 	ItemBox *item.Box
 }
 
-func RemoveWeapon(room *Room, weapon item.Weapon) {
-	for i, t := range room.Weapons {
+func (r *Room) RemoveWeapon(weapon item.Weapon) {
+	for i, t := range r.Weapons {
 		if t == nil {
 			continue
 		}
 		if t.Name == weapon.Name {
-			room.Weapons = append(room.Weapons[:i], room.Weapons[i+1:]...)
+			r.Weapons = append(r.Weapons[:i], r.Weapons[i+1:]...)
 			return
 		}
 	}
 }
 
-func RemoveArmor(room *Room, armor item.Armor) {
-	for i, t := range room.Armors {
+func (r *Room) RemoveArmor(armor item.Armor) {
+	for i, t := range r.Armors {
 		if t == nil {
 			continue
 		}
 		if t.Name == armor.Name {
-			room.Armors = append(room.Armors[:i], room.Armors[i+1:]...)
+			r.Armors = append(r.Armors[:i], r.Armors[i+1:]...)
 			return
 		}
 	}
 }
 
-func RemoveTool(room *Room, tool item.Tool) {
-	for i, t := range room.Tools {
+func (r *Room) RemoveTool(tool item.Tool) {
+	for i, t := range r.Tools {
 		if t == nil {
 			continue
 		}
 		if t.Name == tool.Name {
-			room.Tools = append(room.Tools[:i], room.Tools[i+1:]...)
+			r.Tools = append(r.Tools[:i], r.Tools[i+1:]...)
 			return
 		}
 	}

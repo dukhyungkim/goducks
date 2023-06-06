@@ -49,7 +49,7 @@ func NewDeer() *Monster {
 	}
 }
 
-func AttackPlayer(m *Monster, p *player.Player) {
+func (m *Monster) AttackPlayer(p *player.Player) {
 	fmt.Printf("%s(이)가 당신을 공격합니다.\n", m.Name)
 	fmt.Printf("%s은(는) 당신에게 %d의 피해를 입혔습니다.\n", m.Name, m.Attack)
 	p.CurrentHealth -= m.Attack + p.Defense
@@ -59,6 +59,6 @@ func AttackPlayer(m *Monster, p *player.Player) {
 	}
 }
 
-func DropItem(m *Monster) (itemName string, itemCount int) {
-	return table.GetItemFromTable(m.dropTable)
+func (m *Monster) DropItem() (itemName string, itemCount int) {
+	return m.dropTable.GetItem()
 }

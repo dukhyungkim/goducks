@@ -42,28 +42,41 @@ func NewLockedDoor(d direct.Direction) *Door {
 	return &Door{Name: "잠긴문", Type: Lock, State: Locked, Direction: d}
 }
 
-func OpenDoor(door *Door) {
-	door.State = Open
+func (d *Door) Open() {
+	d.State = Open
 }
 
-func CloseDoor(door *Door) {
-	door.State = Closed
+func (d *Door) Close() {
+	d.State = Closed
 }
 
-func CrashDoor(door *Door) {
-	switch door.Type {
+func (d *Door) Crash() {
+	switch d.Type {
 	case Glass:
-		door.State = Crashed
+		d.State = Crashed
 	default:
 		fmt.Println(msg.ErrCannot)
 	}
 }
 
-func UnlockDoor(door *Door) {
-	switch door.Type {
+func (d *Door) Unlock() {
+	switch d.Type {
 	case Locked:
-		door.State = Closed
+		d.State = Closed
 	default:
 		fmt.Println(msg.ErrCannot)
+	}
+}
+
+func (d *Door) PrintStatus() {
+	switch d.State {
+	case Open:
+		fmt.Printf("%s이 열려있습니다. 지나갈 수 있습니다.\n", d.Name)
+	case Closed:
+		fmt.Printf("%s이 닫혀있습니다. 지나갈 수 없습니다.\n", d.Name)
+	case Locked:
+		fmt.Printf("%s이 잠겨있습니다. 열쇠가 필요합니다.\n", d.Name)
+	case Crashed:
+		fmt.Printf("%s이 부숴져있습니다. 지나갈 수 있습니다.\n", d.Name)
 	}
 }

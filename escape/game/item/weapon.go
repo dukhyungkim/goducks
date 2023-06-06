@@ -11,7 +11,6 @@ type WeaponType string
 
 const (
 	OneHandSword WeaponType = "한손검"
-	Shield       WeaponType = "한손검"
 )
 
 func NewWoodSword() *Weapon {
@@ -20,8 +19,4 @@ func NewWoodSword() *Weapon {
 
 func NewIronSword() *Weapon {
 	return &Weapon{Name: "철검", Type: OneHandSword, Attack: 10}
-}
-
-func NewWoodShield() *Weapon {
-	return &Weapon{Name: "나무 방패", Type: Shield, Defense: 10}
 }

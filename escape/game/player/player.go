@@ -52,16 +52,16 @@ func NewPlayer(name string) Player {
 	}
 }
 
-func CurrentPosition(p Player) (x, y int) {
+func (p *Player) CurrentPosition() (x, y int) {
 	return p.Coordinates.X, p.Coordinates.Y
 }
 
-func SetPosition(p *Player, x, y int) {
+func (p *Player) SetPosition(x, y int) {
 	p.Coordinates.X = x
 	p.Coordinates.Y = y
 }
 
-func FindInventory(p Player, toolName string) (item.Tool, bool) {
+func (p *Player) FindInventory(toolName string) (item.Tool, bool) {
 	for _, tool := range p.Inventory.Tools {
 		if tool.Name == toolName {
 			return tool, true
@@ -70,7 +70,7 @@ func FindInventory(p Player, toolName string) (item.Tool, bool) {
 	return item.Tool{}, false
 }
 
-func AddWeaponToInventory(p *Player, weapon item.Weapon) {
+func (p *Player) AddWeaponToInventory(weapon item.Weapon) {
 	for i := range p.Inventory.Weapons {
 		if p.Inventory.Weapons[i].Name == "" {
 			p.Inventory.Weapons[i] = weapon
@@ -80,7 +80,7 @@ func AddWeaponToInventory(p *Player, weapon item.Weapon) {
 	}
 }
 
-func AddArmorToInventory(p *Player, armor item.Armor) {
+func (p *Player) AddArmorToInventory(armor item.Armor) {
 	for i := range p.Inventory.Armors {
 		if p.Inventory.Armors[i].Name == "" {
 			p.Inventory.Armors[i] = armor
@@ -90,7 +90,7 @@ func AddArmorToInventory(p *Player, armor item.Armor) {
 	}
 }
 
-func AddToolToInventory(p *Player, tool item.Tool) {
+func (p *Player) AddToolToInventory(tool item.Tool) {
 	for i := range p.Inventory.Tools {
 		if p.Inventory.Tools[i].Name == "" {
 			p.Inventory.Tools[i] = tool
@@ -100,7 +100,7 @@ func AddToolToInventory(p *Player, tool item.Tool) {
 	}
 }
 
-func RemoveToolFromInventory(p *Player, tool item.Tool) {
+func (p *Player) RemoveToolFromInventory(tool item.Tool) {
 	for i := range p.Inventory.Tools {
 		if p.Inventory.Tools[i].Name == tool.Name {
 			p.Inventory.Tools[i] = item.Tool{}
@@ -128,7 +128,7 @@ func RemoveArmorFromInventory(p *Player, armor item.Armor) {
 	}
 }
 
-func PrintInventory(p Player) {
+func (p *Player) PrintInventory() {
 	weapons := p.Inventory.Weapons
 	armors := p.Inventory.Armors
 	tools := p.Inventory.Tools
@@ -159,115 +159,115 @@ func PrintInventory(p Player) {
 	fmt.Println("소지품:", strings.Join(outputs, ", "))
 }
 
-func PrintEquipments(player Player) {
+func (p *Player) PrintEquipments() {
 	fmt.Println("=== 착용중인 장비 ===")
-	fmt.Printf("[ 상의]: %s\n", player.Equipment.Top.Name)
-	fmt.Printf("[ 하의]: %s\n", player.Equipment.Bottom.Name)
-	fmt.Printf("[   발]: %s\n", player.Equipment.Shoes.Name)
-	fmt.Printf("[ 왼손]: %s\n", player.Equipment.LeftHand.Name)
-	fmt.Printf("[오른손]: %s\n", player.Equipment.RightHand.Name)
+	fmt.Printf("[ 상의]: %s\n", p.Equipment.Top.Name)
+	fmt.Printf("[ 하의]: %s\n", p.Equipment.Bottom.Name)
+	fmt.Printf("[   발]: %s\n", p.Equipment.Shoes.Name)
+	fmt.Printf("[ 왼손]: %s\n", p.Equipment.LeftHand.Name)
+	fmt.Printf("[오른손]: %s\n", p.Equipment.RightHand.Name)
 }
 
-func PrintStatus(player Player) {
+func (p *Player) PrintStatus() {
 	fmt.Println("=== 플레이어 정보 ===")
-	fmt.Printf("[이름]: %s\n", player.Name)
-	fmt.Printf("[체력]: %d / %d\n", player.CurrentHealth, player.MaxHealth)
-	fmt.Printf("[오른손 공격력]: %d\n", player.Equipment.RightHand.Attack+player.Attack)
-	fmt.Printf("[왼손 공격력]: %d\n", player.Equipment.LeftHand.Attack+player.Attack)
-	fmt.Printf("[방어력]: %d\n", player.Defense)
-	fmt.Printf("[위치]: (%d, %d)\n", player.Coordinates.X, player.Coordinates.Y)
+	fmt.Printf("[이름]: %s\n", p.Name)
+	fmt.Printf("[체력]: %d / %d\n", p.CurrentHealth, p.MaxHealth)
+	fmt.Printf("[오른손 공격력]: %d\n", p.Equipment.RightHand.Attack+p.Attack)
+	fmt.Printf("[왼손 공격력]: %d\n", p.Equipment.LeftHand.Attack+p.Attack)
+	fmt.Printf("[방어력]: %d\n", p.Defense)
+	fmt.Printf("[위치]: (%d, %d)\n", p.Coordinates.X, p.Coordinates.Y)
 }
 
-func EquipWeapon(player *Player, weapon item.Weapon) {
-	if player.Equipment.RightHand.Name == "" {
-		player.Equipment.RightHand = weapon
-		RemoveWeaponFromInventory(player, weapon)
+func (p *Player) EquipWeapon(weapon item.Weapon) {
+	if p.Equipment.RightHand.Name == "" {
+		p.Equipment.RightHand = weapon
+		RemoveWeaponFromInventory(p, weapon)
 		fmt.Printf("%s을(를) 오른손에 쥐었습니다.", weapon.Name)
 		return
 	}
-	if player.Equipment.LeftHand.Name == "" {
-		player.Equipment.LeftHand = weapon
-		RemoveWeaponFromInventory(player, weapon)
+	if p.Equipment.LeftHand.Name == "" {
+		p.Equipment.LeftHand = weapon
+		RemoveWeaponFromInventory(p, weapon)
 		fmt.Printf("%s을(를) 왼손에 쥐었습니다.", weapon.Name)
 		return
 	}
 	fmt.Println("더이상 착용할 수 없습니다.")
 }
 
-func UnEquipWeapon(player *Player, weaponName string) {
-	if player.Equipment.RightHand.Name == weaponName {
-		player.Equipment.RightHand = item.Weapon{}
+func (p *Player) UnEquipWeapon(weaponName string) {
+	if p.Equipment.RightHand.Name == weaponName {
+		p.Equipment.RightHand = item.Weapon{}
 		fmt.Printf("오른손의 %s을(를) 내려놓았습니다.", weaponName)
 		return
 	}
-	if player.Equipment.LeftHand.Name == weaponName {
-		player.Equipment.LeftHand = item.Weapon{}
+	if p.Equipment.LeftHand.Name == weaponName {
+		p.Equipment.LeftHand = item.Weapon{}
 		fmt.Printf("왼손의 %s을(를) 내려놓았습니다.", weaponName)
 		return
 	}
 	fmt.Println("그런 장비는 없습니다.")
 }
 
-func EquipArmor(player *Player, armor item.Armor) {
+func (p *Player) EquipArmor(armor item.Armor) {
 	switch armor.Type {
 	case item.Top:
-		if player.Equipment.Top.Name != "" {
-			fmt.Printf("이미 %s을(를) 입고있습니다.\n", player.Equipment.Top.Name)
+		if p.Equipment.Top.Name != "" {
+			fmt.Printf("이미 %s을(를) 입고있습니다.\n", p.Equipment.Top.Name)
 			return
 		}
-		player.Equipment.Top = armor
-		player.Defense += armor.Defense
-		RemoveArmorFromInventory(player, armor)
+		p.Equipment.Top = armor
+		p.Defense += armor.Defense
+		RemoveArmorFromInventory(p, armor)
 		fmt.Printf("%s을(를) 입었습니다.\n", armor.Name)
 	case item.Bottom:
-		if player.Equipment.Bottom.Name != "" {
-			fmt.Printf("이미 %s을(를) 입고있습니다.\n", player.Equipment.Bottom.Name)
+		if p.Equipment.Bottom.Name != "" {
+			fmt.Printf("이미 %s을(를) 입고있습니다.\n", p.Equipment.Bottom.Name)
 			return
 		}
-		player.Equipment.Bottom = armor
-		player.Defense += armor.Defense
-		RemoveArmorFromInventory(player, armor)
+		p.Equipment.Bottom = armor
+		p.Defense += armor.Defense
+		RemoveArmorFromInventory(p, armor)
 		fmt.Printf("%s을(를) 입었습니다.\n", armor.Name)
 	case item.Shoes:
-		if player.Equipment.Shoes.Name != "" {
-			fmt.Printf("이미 %s을(를) 입고있습니다.\n", player.Equipment.Shoes.Name)
+		if p.Equipment.Shoes.Name != "" {
+			fmt.Printf("이미 %s을(를) 입고있습니다.\n", p.Equipment.Shoes.Name)
 			return
 		}
-		player.Equipment.Shoes = armor
-		player.Defense += armor.Defense
-		RemoveArmorFromInventory(player, armor)
+		p.Equipment.Shoes = armor
+		p.Defense += armor.Defense
+		RemoveArmorFromInventory(p, armor)
 		fmt.Printf("%s을(를) 신었습니다.\n", armor.Name)
 	}
 }
 
-func UnEquipArmor(player *Player, armorName string) {
+func (p *Player) UnEquipArmor(armorName string) {
 	switch armorName {
-	case player.Equipment.Top.Name:
-		armor := player.Equipment.Top
-		player.Equipment.Top = item.Armor{}
-		player.Defense -= armor.Defense
-		AddArmorToInventory(player, armor)
+	case p.Equipment.Top.Name:
+		armor := p.Equipment.Top
+		p.Equipment.Top = item.Armor{}
+		p.Defense -= armor.Defense
+		p.AddArmorToInventory(armor)
 		fmt.Printf("%s을(를) 벗었습니다.\n", armor.Name)
 		return
-	case player.Equipment.Bottom.Name:
-		armor := player.Equipment.Bottom
-		player.Equipment.Bottom = item.Armor{}
-		player.Defense -= armor.Defense
-		AddArmorToInventory(player, armor)
+	case p.Equipment.Bottom.Name:
+		armor := p.Equipment.Bottom
+		p.Equipment.Bottom = item.Armor{}
+		p.Defense -= armor.Defense
+		p.AddArmorToInventory(armor)
 		fmt.Printf("%s을(를) 벗었습니다.\n", armor.Name)
 		return
-	case player.Equipment.Shoes.Name:
-		armor := player.Equipment.Shoes
-		player.Equipment.Shoes = item.Armor{}
-		player.Defense -= armor.Defense
-		AddArmorToInventory(player, armor)
+	case p.Equipment.Shoes.Name:
+		armor := p.Equipment.Shoes
+		p.Equipment.Shoes = item.Armor{}
+		p.Defense -= armor.Defense
+		p.AddArmorToInventory(armor)
 		fmt.Printf("%s을(를) 벗었습니다.\n", armor.Name)
 		return
 	}
 	fmt.Println("그런 장비는 없습니다.")
 }
 
-func FindTool(p Player, toolName string) (item.Tool, bool) {
+func (p *Player) FindTool(toolName string) (item.Tool, bool) {
 	for _, tool := range p.Inventory.Tools {
 		if tool.Name == toolName {
 			return tool, true

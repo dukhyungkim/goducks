@@ -15,8 +15,8 @@ func NewItemBox() *Box {
 	}
 }
 
-func OpenBox(b *Box) (*Weapon, *Armor, []*Tool) {
-	itemName, itemCount := table.GetItemFromTable(b.dropTable)
+func (b *Box) Open() (*Weapon, *Armor, []*Tool) {
+	itemName, itemCount := b.dropTable.GetItem()
 	if itemName == "" && itemCount == 0 {
 		fmt.Println("상자에서 아무것도 나오지 않았습니다.")
 		return nil, nil, nil

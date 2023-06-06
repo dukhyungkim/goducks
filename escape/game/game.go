@@ -4,7 +4,6 @@ import (
 	"escape/game/direct"
 	"escape/game/door"
 	"escape/game/item"
-	"escape/game/monster"
 	"escape/game/player"
 	"escape/game/room"
 	"escape/msg"
@@ -42,8 +41,8 @@ func GetRooms() *[10][10]*room.Room {
 }
 
 func CanIGo(p player.Player, d direct.Direction) bool {
-	cX, cY := player.CurrentPosition(p)
-	fX, fY := direct.GetFutureXY(d, cX, cY)
+	cX, cY := p.CurrentPosition()
+	fX, fY := d.GetFutureXY(cX, cY)
 
 	if xSize <= fX || ySize <= fY {
 		return false
@@ -88,20 +87,7 @@ func printDoorInfo(r room.Room) {
 		return
 	}
 	fmt.Printf("%s쪽에 %s이 있습니다.\n", d.Direction, d.Name)
-	printDoorStatus(*d)
-}
-
-func printDoorStatus(d door.Door) {
-	switch d.State {
-	case door.Open:
-		fmt.Printf("%s이 열려있습니다. 지나갈 수 있습니다.\n", d.Name)
-	case door.Closed:
-		fmt.Printf("%s이 닫혀있습니다. 지나갈 수 없습니다.\n", d.Name)
-	case door.Locked:
-		fmt.Printf("%s이 잠겨있습니다. 열쇠가 필요합니다.\n", d.Name)
-	case door.Crashed:
-		fmt.Printf("%s이 부숴져있습니다. 지나갈 수 있습니다.\n", d.Name)
-	}
+	d.PrintStatus()
 }
 
 func printItemInfo(r room.Room) {
@@ -176,11 +162,11 @@ func HandleCommand(p *player.Player, text string) {
 	case string(direct.North), "ㅂ", "q", "8":
 		moveTo(p, direct.North)
 	case "소지", "소지품", "인벤", "인벤토리", "tw", "twv", "dq", "thwl", "thwlvna":
-		player.PrintInventory(*p)
+		p.PrintInventory()
 	case "장비", "wkdql":
-		player.PrintEquipments(*p)
+		p.PrintEquipments()
 	case "정보", "wjdqh":
-		player.PrintStatus(*p)
+		p.PrintStatus()
 	default:
 		handleLongCommand(p, text)
 	}
@@ -203,7 +189,7 @@ func HandleBattleCommand(p *player.Player, text string) {
 			m.CurrentHealth -= attack
 			if m.CurrentHealth <= 0 {
 				fmt.Printf("%s이(가) 쓰러졌습니다.\n", m.Name)
-				itemName, itemCount := monster.DropItem(m)
+				itemName, itemCount := m.DropItem()
 				fmt.Printf("%s이(가) %d개 떨어졌습니다.\n", itemName, itemCount)
 				for i := 0; i < itemCount; i++ {
 					switch itemName {
@@ -224,7 +210,7 @@ func HandleBattleCommand(p *player.Player, text string) {
 			m.CurrentHealth -= attack
 			if m.CurrentHealth <= 0 {
 				fmt.Printf("%s이(가) 쓰러졌습니다.\n", m.Name)
-				itemName, itemCount := monster.DropItem(m)
+				itemName, itemCount := m.DropItem()
 				fmt.Printf("%s이(가) %d개 떨어졌습니다.\n", itemName, itemCount)
 				for i := 0; i < itemCount; i++ {
 					switch itemName {
@@ -245,7 +231,7 @@ func HandleBattleCommand(p *player.Player, text string) {
 			m.CurrentHealth -= attack
 			if m.CurrentHealth <= 0 {
 				fmt.Printf("%s이(가) 쓰러졌습니다.\n", m.Name)
-				itemName, itemCount := monster.DropItem(m)
+				itemName, itemCount := m.DropItem()
 				fmt.Printf("%s이(가) %d개 떨어졌습니다.\n", itemName, itemCount)
 				for i := 0; i < itemCount; i++ {
 					switch itemName {
@@ -262,7 +248,7 @@ func HandleBattleCommand(p *player.Player, text string) {
 		}
 
 		if r.Monster != nil {
-			monster.AttackPlayer(m, p)
+			m.AttackPlayer(p)
 		}
 	case "도망":
 		if rand.Int()%2 == 1 {
@@ -273,11 +259,11 @@ func HandleBattleCommand(p *player.Player, text string) {
 			return
 		} else {
 			fmt.Println("도망칠 수 없습니다!")
-			monster.AttackPlayer(m, p)
+			m.AttackPlayer(p)
 			return
 		}
 	case "회복약 사용":
-		tool, ok := player.FindTool(*p, "회복약")
+		tool, ok := p.FindTool("회복약")
 		if !ok {
 			fmt.Println("당신에게 그런 도구는 없습니다!")
 			return
@@ -289,9 +275,9 @@ func HandleBattleCommand(p *player.Player, text string) {
 		if p.CurrentHealth > p.MaxHealth {
 			p.CurrentHealth = p.MaxHealth
 		}
-		player.RemoveToolFromInventory(p, tool)
+		p.RemoveToolFromInventory(tool)
 
-		monster.AttackPlayer(m, p)
+		m.AttackPlayer(p)
 	default:
 		fmt.Println(msg.ErrWrongInput)
 	}
@@ -302,9 +288,9 @@ func moveTo(p *player.Player, d direct.Direction) {
 		fmt.Println("이동할 수 없는 곳입니다.")
 		return
 	}
-	x, y := player.CurrentPosition(*p)
-	fX, fY := direct.GetFutureXY(d, x, y)
-	player.SetPosition(p, fX, fY)
+	x, y := p.CurrentPosition()
+	fX, fY := d.GetFutureXY(x, y)
+	p.SetPosition(fX, fY)
 }
 
 func handleLongCommand(p *player.Player, text string) {
@@ -403,7 +389,7 @@ func handleBoxCommand(r *room.Room, command string) {
 	switch command {
 	case "열", "열다", "연다":
 		fmt.Println("상자를 열었습니다.")
-		weapon, armor, tools := item.OpenBox(r.ItemBox)
+		weapon, armor, tools := r.ItemBox.Open()
 		r.ItemBox = nil
 		if weapon != nil {
 			r.Weapons = append(r.Weapons, weapon)
@@ -422,16 +408,16 @@ func handleBoxCommand(r *room.Room, command string) {
 func handleDoorCommand(p *player.Player, d *door.Door, command string) {
 	switch command {
 	case "보", "보다", "본다":
-		printDoorStatus(*d)
+		d.PrintStatus()
 	case "열", "열다", "연다":
 		switch d.State {
 		case door.Open:
 			fmt.Printf("%s은 이미 열려있습니다.\n", d.Name)
 			return
 		case door.Closed:
-			door.OpenDoor(d)
+			d.Open()
 			nextDoor := findNextDoor(p, *d)
-			door.OpenDoor(nextDoor)
+			nextDoor.Open()
 			fmt.Printf("%s을(를) 열었습니다.\n", d.Name)
 		default:
 			fmt.Println(msg.ErrCannot)
@@ -443,9 +429,9 @@ func handleDoorCommand(p *player.Player, d *door.Door, command string) {
 			fmt.Printf("%s은 이미 닫혀있습니다.\n", d.Name)
 			return
 		case door.Open:
-			door.CloseDoor(d)
+			d.Close()
 			nextDoor := findNextDoor(p, *d)
-			door.CloseDoor(nextDoor)
+			nextDoor.Close()
 			fmt.Printf("%s을(를) 닫았습니다.\n", d.Name)
 		default:
 			fmt.Println(msg.ErrCannot)
@@ -464,12 +450,12 @@ func handleWeaponCommand(p *player.Player, weapon item.Weapon, command string) {
 	r := currentRoom(*p)
 	switch command {
 	case "줍", "주워":
-		player.AddWeaponToInventory(p, weapon)
-		room.RemoveWeapon(r, weapon)
+		p.AddWeaponToInventory(weapon)
+		r.RemoveWeapon(weapon)
 	case "착", "착용":
-		player.EquipWeapon(p, weapon)
+		p.EquipWeapon(weapon)
 	case "벗", "벗어":
-		player.UnEquipWeapon(p, weapon.Name)
+		p.UnEquipWeapon(weapon.Name)
 	default:
 		fmt.Println(msg.ErrWrongInput)
 	}
@@ -479,12 +465,12 @@ func handleArmorCommand(p *player.Player, armor item.Armor, command string) {
 	r := currentRoom(*p)
 	switch command {
 	case "줍", "주워":
-		player.AddArmorToInventory(p, armor)
-		room.RemoveArmor(r, armor)
+		p.AddArmorToInventory(armor)
+		r.RemoveArmor(armor)
 	case "입", "입다":
-		player.EquipArmor(p, armor)
+		p.EquipArmor(armor)
 	case "벗", "벗어":
-		player.UnEquipArmor(p, armor.Name)
+		p.UnEquipArmor(armor.Name)
 	default:
 		fmt.Println(msg.ErrWrongInput)
 	}
@@ -494,8 +480,8 @@ func handleItemCommand(p *player.Player, tool item.Tool, command string) {
 	r := currentRoom(*p)
 	switch command {
 	case "줍", "주워":
-		player.AddToolToInventory(p, tool)
-		room.RemoveTool(r, tool)
+		p.AddToolToInventory(tool)
+		r.RemoveTool(tool)
 	default:
 		fmt.Println(msg.ErrWrongInput)
 	}
@@ -505,7 +491,7 @@ func handleThreeWordsCommand(p *player.Player, tokens []string) {
 	command := tokens[2]
 	switch command {
 	case "사용":
-		tool, ok := player.FindInventory(*p, tokens[0])
+		tool, ok := p.FindInventory(tokens[0])
 		if !ok {
 			fmt.Println(msg.ErrNotHave)
 			return
@@ -522,7 +508,7 @@ func handleThreeWordsCommand(p *player.Player, tokens []string) {
 }
 
 func currentRoom(p player.Player) *room.Room {
-	x, y := player.CurrentPosition(p)
+	x, y := p.CurrentPosition()
 	return rooms[x][y]
 }
 
@@ -530,20 +516,20 @@ func useTool(p *player.Player, tool item.Tool, d *door.Door) {
 	switch tool.Type {
 	case item.Hammer:
 		if d.Type == door.Glass {
-			door.CrashDoor(d)
+			d.Crash()
 			nextDoor := findNextDoor(p, *d)
-			door.CrashDoor(nextDoor)
+			nextDoor.Crash()
 			fmt.Printf("%s로 %s을 부쉈습니다.\n", tool.Name, d.Name)
-			player.RemoveToolFromInventory(p, tool)
+			p.RemoveToolFromInventory(tool)
 			return
 		}
 	case item.Key:
 		if d.Type == door.Locked {
-			door.UnlockDoor(d)
+			d.Unlock()
 			nextDoor := findNextDoor(p, *d)
-			door.UnlockDoor(nextDoor)
+			nextDoor.Unlock()
 			fmt.Printf("%s로 %s을 열었습니다.\n", tool.Name, d.Name)
-			player.RemoveToolFromInventory(p, tool)
+			p.RemoveToolFromInventory(tool)
 			return
 		}
 	}
@@ -551,8 +537,8 @@ func useTool(p *player.Player, tool item.Tool, d *door.Door) {
 }
 
 func findNextDoor(p *player.Player, door door.Door) *door.Door {
-	x, y := player.CurrentPosition(*p)
-	fX, fY := direct.GetFutureXY(door.Direction, x, y)
+	x, y := p.CurrentPosition()
+	fX, fY := door.Direction.GetFutureXY(x, y)
 	nextDoor := rooms[fX][fY].Door
 	if nextDoor != nil && nextDoor.Name == door.Name {
 		return nextDoor

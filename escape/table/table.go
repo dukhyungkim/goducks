@@ -49,9 +49,9 @@ func calcDropTable(dropInfo []dropInfo) []DropItem {
 	return dropItems
 }
 
-func GetItemFromTable(dropTable DropTable) (string, int) {
+func (table *DropTable) GetItem() (string, int) {
 	choice := rand.Float32() * (100 - 1)
-	for _, item := range dropTable.list {
+	for _, item := range table.list {
 		if choice <= item.Range {
 			return item.Name, item.Count
 		}

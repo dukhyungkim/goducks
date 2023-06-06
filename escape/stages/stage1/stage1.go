@@ -15,7 +15,7 @@ func GoToStage(p *player.Player) {
 	rooms := game.GetRooms()
 	InitStage(rooms)
 	x, y := StartPosition()
-	player.SetPosition(p, x, y)
+	p.SetPosition(x, y)
 
 	for {
 		game.PrintCurrentStatus(*p)
@@ -64,6 +64,6 @@ func IsGoal(p player.Player) bool {
 	const goalX = 7
 	const goalY = 5
 
-	x, y := player.CurrentPosition(p)
+	x, y := p.CurrentPosition()
 	return goalX == x && goalY == y
 }
