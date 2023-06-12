@@ -2,6 +2,7 @@ package item
 
 import (
 	"escape/table"
+	"escape/util/hangul"
 	"fmt"
 )
 
@@ -22,7 +23,7 @@ func (b *Box) Open() (*Weapon, *Armor, []*Tool) {
 		return nil, nil, nil
 	}
 
-	fmt.Printf("상자에서 %s이(가) %d개 나왔습니다.\n", itemName, itemCount)
+	fmt.Printf("상자에서 %s %d개 나왔습니다.\n", hangul.WithJosa(itemName, hangul.LeeGa), itemCount)
 	switch itemName {
 	case "목검":
 		return NewWoodSword(), nil, nil

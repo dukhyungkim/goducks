@@ -3,6 +3,7 @@ package player
 import (
 	"escape/game/direct"
 	"escape/game/item"
+	"escape/util/hangul"
 	"fmt"
 	"strings"
 )
@@ -74,7 +75,7 @@ func (p *Player) AddWeaponToInventory(weapon item.Weapon) {
 	for i := range p.Inventory.Weapons {
 		if p.Inventory.Weapons[i].Name == "" {
 			p.Inventory.Weapons[i] = weapon
-			fmt.Printf("%s을(를) 소지품에 넣었습니다.\n", weapon.Name)
+			fmt.Printf("%s 소지품에 넣었습니다.\n", hangul.WithJosa(weapon.Name, hangul.EulLul))
 			return
 		}
 	}
@@ -84,7 +85,7 @@ func (p *Player) AddArmorToInventory(armor item.Armor) {
 	for i := range p.Inventory.Armors {
 		if p.Inventory.Armors[i].Name == "" {
 			p.Inventory.Armors[i] = armor
-			fmt.Printf("%s을(를) 소지품에 넣었습니다.\n", armor.Name)
+			fmt.Printf("%s 소지품에 넣었습니다.\n", hangul.WithJosa(armor.Name, hangul.EulLul))
 			return
 		}
 	}
@@ -94,7 +95,7 @@ func (p *Player) AddToolToInventory(tool item.Tool) {
 	for i := range p.Inventory.Tools {
 		if p.Inventory.Tools[i].Name == "" {
 			p.Inventory.Tools[i] = tool
-			fmt.Printf("%s을(를) 소지품에 넣었습니다.\n", tool.Name)
+			fmt.Printf("%s 소지품에 넣었습니다.\n", hangul.WithJosa(tool.Name, hangul.EulLul))
 			return
 		}
 	}
@@ -104,7 +105,7 @@ func (p *Player) RemoveToolFromInventory(tool item.Tool) {
 	for i := range p.Inventory.Tools {
 		if p.Inventory.Tools[i].Name == tool.Name {
 			p.Inventory.Tools[i] = item.Tool{}
-			fmt.Printf("%s(이)가 소지품에서 없어졌습니다.\n", tool.Name)
+			fmt.Printf("%s 소지품에서 없어졌습니다.\n", hangul.WithJosa(tool.Name, hangul.LeeGa))
 			return
 		}
 	}
@@ -182,13 +183,13 @@ func (p *Player) EquipWeapon(weapon item.Weapon) {
 	if p.Equipment.RightHand.Name == "" {
 		p.Equipment.RightHand = weapon
 		RemoveWeaponFromInventory(p, weapon)
-		fmt.Printf("%s을(를) 오른손에 쥐었습니다.", weapon.Name)
+		fmt.Printf("%s 오른손에 쥐었습니다.", hangul.WithJosa(weapon.Name, hangul.EulLul))
 		return
 	}
 	if p.Equipment.LeftHand.Name == "" {
 		p.Equipment.LeftHand = weapon
 		RemoveWeaponFromInventory(p, weapon)
-		fmt.Printf("%s을(를) 왼손에 쥐었습니다.", weapon.Name)
+		fmt.Printf("%s 왼손에 쥐었습니다.", hangul.WithJosa(weapon.Name, hangul.EulLul))
 		return
 	}
 	fmt.Println("더이상 착용할 수 없습니다.")
@@ -197,12 +198,12 @@ func (p *Player) EquipWeapon(weapon item.Weapon) {
 func (p *Player) UnEquipWeapon(weaponName string) {
 	if p.Equipment.RightHand.Name == weaponName {
 		p.Equipment.RightHand = item.Weapon{}
-		fmt.Printf("오른손의 %s을(를) 내려놓았습니다.", weaponName)
+		fmt.Printf("오른손의 %s 내려놓았습니다.", hangul.WithJosa(weaponName, hangul.EulLul))
 		return
 	}
 	if p.Equipment.LeftHand.Name == weaponName {
 		p.Equipment.LeftHand = item.Weapon{}
-		fmt.Printf("왼손의 %s을(를) 내려놓았습니다.", weaponName)
+		fmt.Printf("왼손의 %s 내려놓았습니다.", hangul.WithJosa(weaponName, hangul.EulLul))
 		return
 	}
 	fmt.Println("그런 장비는 없습니다.")
@@ -212,31 +213,31 @@ func (p *Player) EquipArmor(armor item.Armor) {
 	switch armor.Type {
 	case item.Top:
 		if p.Equipment.Top.Name != "" {
-			fmt.Printf("이미 %s을(를) 입고있습니다.\n", p.Equipment.Top.Name)
+			fmt.Printf("이미 %s 입고있습니다.\n", hangul.WithJosa(p.Equipment.Top.Name, hangul.EulLul))
 			return
 		}
 		p.Equipment.Top = armor
 		p.Defense += armor.Defense
 		RemoveArmorFromInventory(p, armor)
-		fmt.Printf("%s을(를) 입었습니다.\n", armor.Name)
+		fmt.Printf("%s 입었습니다.\n", hangul.WithJosa(armor.Name, hangul.EulLul))
 	case item.Bottom:
 		if p.Equipment.Bottom.Name != "" {
-			fmt.Printf("이미 %s을(를) 입고있습니다.\n", p.Equipment.Bottom.Name)
+			fmt.Printf("이미 %s 입고있습니다.\n", hangul.WithJosa(p.Equipment.Bottom.Name, hangul.EulLul))
 			return
 		}
 		p.Equipment.Bottom = armor
 		p.Defense += armor.Defense
 		RemoveArmorFromInventory(p, armor)
-		fmt.Printf("%s을(를) 입었습니다.\n", armor.Name)
+		fmt.Printf("%s 입었습니다.\n", hangul.WithJosa(armor.Name, hangul.EulLul))
 	case item.Shoes:
 		if p.Equipment.Shoes.Name != "" {
-			fmt.Printf("이미 %s을(를) 입고있습니다.\n", p.Equipment.Shoes.Name)
+			fmt.Printf("이미 %s 입고있습니다.\n", hangul.WithJosa(p.Equipment.Shoes.Name, hangul.EulLul))
 			return
 		}
 		p.Equipment.Shoes = armor
 		p.Defense += armor.Defense
 		RemoveArmorFromInventory(p, armor)
-		fmt.Printf("%s을(를) 신었습니다.\n", armor.Name)
+		fmt.Printf("%s 신었습니다.\n", hangul.WithJosa(armor.Name, hangul.EulLul))
 	}
 }
 
@@ -247,21 +248,21 @@ func (p *Player) UnEquipArmor(armorName string) {
 		p.Equipment.Top = item.Armor{}
 		p.Defense -= armor.Defense
 		p.AddArmorToInventory(armor)
-		fmt.Printf("%s을(를) 벗었습니다.\n", armor.Name)
+		fmt.Printf("%s 벗었습니다.\n", hangul.WithJosa(armor.Name, hangul.EulLul))
 		return
 	case p.Equipment.Bottom.Name:
 		armor := p.Equipment.Bottom
 		p.Equipment.Bottom = item.Armor{}
 		p.Defense -= armor.Defense
 		p.AddArmorToInventory(armor)
-		fmt.Printf("%s을(를) 벗었습니다.\n", armor.Name)
+		fmt.Printf("%s 벗었습니다.\n", hangul.WithJosa(armor.Name, hangul.EulLul))
 		return
 	case p.Equipment.Shoes.Name:
 		armor := p.Equipment.Shoes
 		p.Equipment.Shoes = item.Armor{}
 		p.Defense -= armor.Defense
 		p.AddArmorToInventory(armor)
-		fmt.Printf("%s을(를) 벗었습니다.\n", armor.Name)
+		fmt.Printf("%s 벗었습니다.\n", hangul.WithJosa(armor.Name, hangul.EulLul))
 		return
 	}
 	fmt.Println("그런 장비는 없습니다.")

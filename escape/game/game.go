@@ -8,6 +8,7 @@ import (
 	"escape/game/room"
 	"escape/msg"
 	"escape/util"
+	"escape/util/hangul"
 	"fmt"
 	"log"
 	"math/rand"
@@ -123,7 +124,7 @@ func printMonsterInfo(r room.Room) {
 	if r.Monster == nil {
 		return
 	}
-	fmt.Printf("%s이(가) 돌아다니고 있습니다.\n", r.Monster.Name)
+	fmt.Printf("%s 돌아다니고 있습니다.\n", hangul.WithJosa(r.Monster.Name, hangul.LeeGa))
 }
 
 func printPath(p player.Player) {
@@ -182,15 +183,15 @@ func HandleBattleCommand(p *player.Player, text string) {
 	m := r.Monster
 	switch text {
 	case "공격", "쳐", "ㅊ", "c":
-		fmt.Printf("당신은 %s을(를) 공격합니다.\n", m.Name)
+		fmt.Printf("당신은 %s 공격합니다.\n", hangul.WithJosa(m.Name, hangul.EulLul))
 		if r.Monster != nil && p.Equipment.RightHand.Name != "" {
 			attack := p.Equipment.RightHand.Attack + p.Attack
 			fmt.Printf("당신은 %s에게 %d의 피해를 입혔습니다.\n", m.Name, attack)
 			m.CurrentHealth -= attack
 			if m.CurrentHealth <= 0 {
-				fmt.Printf("%s이(가) 쓰러졌습니다.\n", m.Name)
+				fmt.Printf("%s 쓰러졌습니다.\n", hangul.WithJosa(m.Name, hangul.LeeGa))
 				itemName, itemCount := m.DropItem()
-				fmt.Printf("%s이(가) %d개 떨어졌습니다.\n", itemName, itemCount)
+				fmt.Printf("%s %d개 떨어졌습니다.\n", hangul.WithJosa(itemName, hangul.LeeGa), itemCount)
 				for i := 0; i < itemCount; i++ {
 					switch itemName {
 					case "회복약":
@@ -209,9 +210,9 @@ func HandleBattleCommand(p *player.Player, text string) {
 			fmt.Printf("당신은 %s에게 %d의 피해를 입혔습니다.\n", m.Name, attack)
 			m.CurrentHealth -= attack
 			if m.CurrentHealth <= 0 {
-				fmt.Printf("%s이(가) 쓰러졌습니다.\n", m.Name)
+				fmt.Printf("%s 쓰러졌습니다.\n", hangul.WithJosa(m.Name, hangul.LeeGa))
 				itemName, itemCount := m.DropItem()
-				fmt.Printf("%s이(가) %d개 떨어졌습니다.\n", itemName, itemCount)
+				fmt.Printf("%s %d개 떨어졌습니다.\n", hangul.WithJosa(itemName, hangul.LeeGa), itemCount)
 				for i := 0; i < itemCount; i++ {
 					switch itemName {
 					case "회복약":
@@ -230,9 +231,9 @@ func HandleBattleCommand(p *player.Player, text string) {
 			fmt.Printf("당신은 %s에게 %d의 피해를 입혔습니다.\n", m.Name, attack)
 			m.CurrentHealth -= attack
 			if m.CurrentHealth <= 0 {
-				fmt.Printf("%s이(가) 쓰러졌습니다.\n", m.Name)
+				fmt.Printf("%s 쓰러졌습니다.\n", hangul.WithJosa(m.Name, hangul.LeeGa))
 				itemName, itemCount := m.DropItem()
-				fmt.Printf("%s이(가) %d개 떨어졌습니다.\n", itemName, itemCount)
+				fmt.Printf("%s %d개 떨어졌습니다.\n", hangul.WithJosa(itemName, hangul.LeeGa), itemCount)
 				for i := 0; i < itemCount; i++ {
 					switch itemName {
 					case "회복약":
@@ -381,7 +382,7 @@ func handleMonsterCommand(r *room.Room, p *player.Player, command string) {
 	switch command {
 	case "공격", "쳐":
 		p.Mode = player.InBattle
-		fmt.Printf("당신은 %s와(과) 전투를 시작합니다.\n", r.Monster.Name)
+		fmt.Printf("당신은 %s 전투를 시작합니다.\n", hangul.WithJosa(r.Monster.Name, hangul.WaGwa))
 	}
 }
 
@@ -412,13 +413,13 @@ func handleDoorCommand(p *player.Player, d *door.Door, command string) {
 	case "열", "열다", "연다":
 		switch d.State {
 		case door.Open:
-			fmt.Printf("%s은 이미 열려있습니다.\n", d.Name)
+			fmt.Printf("%s 이미 열려있습니다.\n", hangul.WithJosa(d.Name, hangul.EunNun))
 			return
 		case door.Closed:
 			d.Open()
 			nextDoor := findNextDoor(p, *d)
 			nextDoor.Open()
-			fmt.Printf("%s을(를) 열었습니다.\n", d.Name)
+			fmt.Printf("%s 열었습니다.\n", hangul.WithJosa(d.Name, hangul.EulLul))
 		default:
 			fmt.Println(msg.ErrCannot)
 			return
@@ -426,19 +427,19 @@ func handleDoorCommand(p *player.Player, d *door.Door, command string) {
 	case "닫", "닫다", "닫는다":
 		switch d.State {
 		case door.Closed:
-			fmt.Printf("%s은 이미 닫혀있습니다.\n", d.Name)
+			fmt.Printf("%s 이미 닫혀있습니다.\n", hangul.WithJosa(d.Name, hangul.EunNun))
 			return
 		case door.Open:
 			d.Close()
 			nextDoor := findNextDoor(p, *d)
 			nextDoor.Close()
-			fmt.Printf("%s을(를) 닫았습니다.\n", d.Name)
+			fmt.Printf("%s 닫았습니다.\n", hangul.WithJosa(d.Name, hangul.EulLul))
 		default:
 			fmt.Println(msg.ErrCannot)
 			return
 		}
 		if d.State == door.Closed {
-			fmt.Printf("%s은 이미 닫혀있습니다.\n", d.Name)
+			fmt.Printf("%s은 이미 닫혀있습니다.\n", hangul.WithJosa(d.Name, hangul.EunNun))
 			return
 		}
 	default:

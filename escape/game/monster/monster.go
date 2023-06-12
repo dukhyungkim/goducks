@@ -3,6 +3,7 @@ package monster
 import (
 	"escape/game/player"
 	"escape/table"
+	"escape/util/hangul"
 	"fmt"
 	"os"
 )
@@ -50,8 +51,8 @@ func NewDeer() *Monster {
 }
 
 func (m *Monster) AttackPlayer(p *player.Player) {
-	fmt.Printf("%s(이)가 당신을 공격합니다.\n", m.Name)
-	fmt.Printf("%s은(는) 당신에게 %d의 피해를 입혔습니다.\n", m.Name, m.Attack)
+	fmt.Printf("%s 당신을 공격합니다.\n", hangul.WithJosa(m.Name, hangul.LeeGa))
+	fmt.Printf("%s 당신에게 %d의 피해를 입혔습니다.\n", hangul.WithJosa(m.Name, hangul.LeeGa), m.Attack)
 	p.CurrentHealth -= m.Attack + p.Defense
 	if p.CurrentHealth <= 0 {
 		fmt.Println("사망하였습니다.")
